@@ -1,0 +1,164 @@
+<html>
+  <head>
+    <title>YANS2021 ハッカソン - リーダーボード</title>
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.0/js/jquery.tablesorter.min.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style type="text/css">
+      .scroll-table {
+          overflow-x: auto;
+          white-space: nowrap;
+          -webkit-overflow-scrolling: touch;
+      }
+      table {
+          width: 100%;
+      }
+      .tablesorter-headerUnSorted {
+          background-image: url('https://img.icons8.com/material-sharp/15/000000/sort.png');
+          background-repeat: no-repeat;
+          background-position: center right;
+      }
+      .tablesorter-headerAsc {
+          background-image: url('https://img.icons8.com/material-sharp/15/000000/sort-up.png');
+          background-repeat: no-repeat;
+          background-position: center right;
+          border-bottom: #000 2px solid;
+      }
+      .tablesorter-headerDesc {
+          background-image: url('https://img.icons8.com/material-sharp/15/000000/sort-down.png');
+          background-repeat: no-repeat;
+          background-position: center right;
+          border-bottom: #000 2px solid;
+      }
+      .sorter-false {
+        background-image: none;
+      }
+    </style>
+    <script>
+          $(document).ready(function() {
+          $('#score_board').tablesorter(
+            {
+              theme : "materialize",
+              headers: {
+                0: {sorter:false},
+                1: {sorter:false}
+              }
+            }
+          );
+      });
+    </script>
+  </head>
+  <body>
+    <nav class="nav-wrapper light-green darken-3" style="position: fixed; top:0px;">
+      <a class="brand-logo center" href="#">YANS2021 Leaderboard</a>
+      {% if current_user.is_authenticated %}
+      <ul id="nav-mobile" class="right hide-on-med-and-down">
+        <li>{{ current_user.user_id }} でログイン中</li>
+        {% if current_user.is_admin %}
+        <li><a href="{{ url_for('admin.index') }}">管理画面</a></li>
+        {% endif %}
+        <li><a class="nav-link" href="{{ url_for('logout') }}">ログアウト</a></li>
+      </ul>
+      {% endif %}
+    </nav>
+
+    <div style="margin-top:100px;">
+
+    {% with messages = get_flashed_messages(with_categories=false) %}
+      {% if messages %}
+      <div class="row">
+        <div class="col l8 offset-l2 s12 left">
+        <ul class="flashes">
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+        </ul>
+      </div>
+      </div>
+      {% endif %}
+    {% endwith %}
+
+    {% if not current_user.is_authenticated %}
+      <form action="{{ url_for('login') }}" method="POST" class="col s12 l12">
+        <div class="row">
+          {{ login_form.csrf_token }}
+          <div class="input-field inline col s4 l3 offset-l2">
+          {{ login_form.user_id.label }} {{ login_form.user_id }}
+          </div>
+          <div class="input-field inline col s4 l3">
+          {{ login_form.password.label }} {{ login_form.password }}
+          </div>
+          <div class="input-field inline col s4 l2">
+          <button class="btn waves-effect waves-light right" type="submit" name="action">
+            ログイン<i class="material-icons right">login</i>
+          </button>
+          </div>
+        </div>
+      </form>
+
+    {% endif %}
+
+    {% if current_user.is_authenticated %}
+    <form action="{{ url_for('upload_and_evaluate') }}" method="POST" enctype="multipart/form-data" class="row col s12 l12">
+      {{ upload_form.csrf_token }}
+      <div class="input-field file-field inline col s5 offset-l2 l3">
+        <div class="btn">
+          ファイルを選択
+          <input type="file" name="zip_file" id="zip_file">
+        </div>
+        <div class="file-path-wrapper">
+          <input class="file-path validate" type="text" name="zip_file" id="zip_file">
+        </div>
+      </div>
+      <div class="input-field inline col s5 l3">
+        {{ upload_form.description.label }} {{ upload_form.description }}
+      </div>
+      <div class="input-field inline col s2 l2">
+      <button class="btn waves-effect waves-light right" type="submit" name="action">
+        SUBMIT<i class="material-icons right">send</i>
+      </button>
+      </div>
+    </form>
+    {% endif %}
+    <div class="row scroll-table">
+      <div class="col l10 offset-l1 s12">
+        <table id="score_board" class="highlight centered">
+          <thead>
+            <tr>
+              <th style="min-width :200px;">#</th>
+              <th style="min-width :300px;">チーム</th>
+              <th>Person</th>
+              <th>Company</th>
+              <th>City</th>
+              <th>Compound</th>
+              <th>Airport</th>
+              <th>Overall</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in score_table %}
+              <tr>
+                <td><span style="font-weight: bolder;">{{ loop.index }}</span><br><span class="badge">{{ row.created_at }}</span></td>
+                <td><span style="font-weight: bolder;">{{ row.print_name }}</span><br>{{ row.comment }}</td>
+                {% for elem in ['Person', 'Company', 'City', 'Compound', 'Airport', 'Overall'] %}
+                  <td>{{ row[elem]|round(3) }}</td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="row" style="position: absolute; bottom: 0; width: 100%;">
+    <div class="col s12 l4 offset-l4 center">
+      <img src="/static/logo.jpg" height=30px></img> <span class="blue-grey-text"><a class="blue-grey-text" href="https://yans.anlp.jp/entry/yans2021">NLP若手の会</a></span>
+    </div>
+  </div>
+
+</body>
+</html>
