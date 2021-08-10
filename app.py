@@ -26,7 +26,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///{host}/{name}'.format(**{
     'host': base_dir,
     'name': 'db.sqlite3'
 })
-app.config['FLASK_ADMIN_SWATCH'] = 'United'
+#app.config['FLASK_ADMIN_SWATCH'] = 'United'
 db = SQLAlchemy(app)
 
 
