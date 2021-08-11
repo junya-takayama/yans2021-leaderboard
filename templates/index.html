@@ -129,21 +129,29 @@
         <table id="score_board" class="highlight centered">
           <thead>
             <tr>
-              <th style="min-width :200px;">#</th>
-              <th style="min-width :300px;">チーム</th>
-              <th>Person</th>
-              <th>Company</th>
-              <th>City</th>
-              <th>Compound</th>
-              <th>Airport</th>
-              <th>Overall</th>
+              <th style="min-width: 200px;">#</th>
+              <th style="min-width: 200px; max-width: 200px;">チーム</th>
+              <th style="padding-right: 20px;">Person</th>
+              <th style="padding-right: 20px;">Company</th>
+              <th style="padding-right: 20px;">City</th>
+              <th style="padding-right: 20px;">Compound</th>
+              <th style="padding-right: 20px;">Airport</th>
+              <th style="padding-right: 20px;">Overall</th>
             </tr>
           </thead>
           <tbody>
             {% for row in score_table %}
               <tr>
-                <td><span style="font-weight: bolder;">{{ loop.index }}</span><br><span class="badge">{{ row.created_at }}</span></td>
-                <td><span style="font-weight: bolder;">{{ row.print_name }}</span><br>{{ row.comment }}</td>
+                <td>
+                  <span style="font-weight: bolder;">{{ loop.index }}</span>
+                  <br><span class="badge">
+                    {{ row.created_at }}
+                  </span>
+                </td>
+                <td>
+                  <span style="font-weight: bolder;">{{ row.print_name }}</span>
+                  <br>{{ row.comment }}
+                </td>
                 {% for elem in ['Person', 'Company', 'City', 'Compound', 'Airport', 'Overall'] %}
                   <td>{{ row[elem]|round(3) }}</td>
                 {% endfor %}

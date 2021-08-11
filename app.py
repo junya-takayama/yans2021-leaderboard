@@ -4,6 +4,7 @@ from flask_login import LoginManager, UserMixin, login_user, current_user, logou
 from forms import LoginForm, UploadForm
 from local_settings import SECRET_KEY
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from sqlalchemy.sql import text
 from flask_admin import Admin, expose, AdminIndexView
 from flask_admin.contrib.sqla import ModelView
@@ -28,6 +29,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///{host}/{name}'.format(**{
 })
 #app.config['FLASK_ADMIN_SWATCH'] = 'United'
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+db.create_all()
 
 
 class User(UserMixin, db.Model):
@@ -38,6 +41,7 @@ class User(UserMixin, db.Model):
     print_name = db.Column(db.String(256), unique=False, nullable=False)
     password = db.Column(db.String(256), unique=False, nullable=False)
     is_admin = db.Column(db.Boolean, nullable=False)
+    n_submit = db.Column(db.Integer, default=0)
     scores = db.relationship("Score", backref="users")
 
     def __init__(self, user_id, password, print_name, is_admin=False):
@@ -95,7 +99,7 @@ class MyAdminIndexView(AdminIndexView):
         return super(MyAdminIndexView, self).index()
 
 
-db.create_all()
+# db.create_all()
 admin = Admin(app, index_view=MyAdminIndexView(), template_mode='bootstrap3')
 admin.add_view(MyModelView(Score, db.session))
 admin.add_view(MyModelView(User, db.session))
@@ -207,9 +211,11 @@ def upload_and_evaluate():
     result['comment'] = str(description)
     score_record = Score(result)
     db.session.add(score_record)
+    user_record = db.session.query(User).filter_by(id=current_user.id).first()
+    user_record.n_submit += 1
     db.session.commit()
     return redirect(url_for('index'))
 
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8000, debug=False)
+    app.run(host="0.0.0.0", port=8000, debug=True)
