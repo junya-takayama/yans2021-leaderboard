@@ -30,7 +30,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///{host}/{name}'.format(**{
 #app.config['FLASK_ADMIN_SWATCH'] = 'United'
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-db.create_all()
 
 
 class User(UserMixin, db.Model):
@@ -78,6 +77,8 @@ class Score(db.Model):
         self.Airport = result_dict['Airport.json']
         self.Overall = result_dict['overall']
 
+
+db.create_all()
 
 @event.listens_for(User.password, 'set', retval=True)
 def hash_user_password(target, value, oldvalue, initiator):
