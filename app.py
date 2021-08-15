@@ -188,7 +188,7 @@ def upload_and_evaluate():
     filenames = {
         'Company.json', 'City.json',
     }
-    settings = json.load(open('./data/settings.json', 'r'))
+    settings = json.load(open(base_dir + '/data/settings.json', 'r'))
     target_dict = settings['target_dict']
     annotation_dict = settings['annotation_dict']
     upload_form = UploadForm()
@@ -208,7 +208,9 @@ def upload_and_evaluate():
                             json.loads(line) for line in
                             existing_zip.open(fname, 'r').readlines()
                         ]
-                        annotation_path = annotation_dict[basename]
+                        annotation_path = os.path.join(
+                            base_dir, annotation_dict[basename]
+                        )
                         target = target_dict[basename]
                         score_dict = scoring.get_score(
                             answer=annotation_path,
