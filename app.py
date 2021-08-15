@@ -12,7 +12,7 @@ from sqlalchemy.sql.functions import current_timestamp
 from sqlalchemy import event
 import tempfile
 import zipfile
-import metrics
+import scoring
 import json
 import hashlib
 import os
@@ -49,6 +49,9 @@ class User(UserMixin, db.Model):
         self.print_name = print_name
         self.is_admin = is_admin
 
+    def __repr__(self):
+        return self.user_id
+
     def get_id(self):
         return (self.user_id)
 
@@ -59,26 +62,27 @@ class Score(db.Model):
     created_at = db.Column(db.TIMESTAMP, server_default=current_timestamp())
     user_primary_key = db.Column(db.Integer, db.ForeignKey('users.id'))
     comment = db.Column(db.String(256), unique=False, nullable=True)
-    Person = db.Column(db.Float, nullable=False)
+    # Person = db.Column(db.Float, nullable=False)
     Company = db.Column(db.Float, nullable=False)
     City = db.Column(db.Float, nullable=False)
-    Compound = db.Column(db.Float, nullable=False)
-    Airport = db.Column(db.Float, nullable=False)
+    # Compound = db.Column(db.Float, nullable=False)
+    # Airport = db.Column(db.Float, nullable=False)
     Overall = db.Column(db.Float, nullable=False)
     user = db.relationship("User")
 
     def __init__(self, result_dict):
         self.user_primary_key = result_dict['user_primary_key']
         self.comment = result_dict['comment']
-        self.Person = result_dict['Person.json']
+        # self.Person = result_dict['Person.json']
         self.Company = result_dict['Company.json']
         self.City = result_dict['City.json']
-        self.Compound = result_dict['Compound.json']
-        self.Airport = result_dict['Airport.json']
+        # self.Compound = result_dict['Compound.json']
+        # self.Airport = result_dict['Airport.json']
         self.Overall = result_dict['overall']
 
 
 db.create_all()
+
 
 @event.listens_for(User.password, 'set', retval=True)
 def hash_user_password(target, value, oldvalue, initiator):
@@ -87,7 +91,14 @@ def hash_user_password(target, value, oldvalue, initiator):
     return value
 
 
-class MyModelView(ModelView):
+class ScoreView(ModelView):
+    def is_accessible(self):
+        return current_user.is_admin
+
+
+class UserView(ModelView):
+    column_exclude_list = ['scores']
+
     def is_accessible(self):
         return current_user.is_admin
 
@@ -102,8 +113,8 @@ class MyAdminIndexView(AdminIndexView):
 
 # db.create_all()
 admin = Admin(app, index_view=MyAdminIndexView(), template_mode='bootstrap3')
-admin.add_view(MyModelView(Score, db.session))
-admin.add_view(MyModelView(User, db.session))
+admin.add_view(ScoreView(Score, db.session))
+admin.add_view(UserView(User, db.session))
 
 
 @login_manager.user_loader
@@ -143,7 +154,7 @@ def index():
     login_form = LoginForm()
     upload_form = UploadForm()
     columns = ['print_name', 'created_at', 'comment',
-               'Person', 'Company', 'City', 'Compound', 'Airport', 'Overall']
+               'Company', 'City', 'Overall']
     sort_key = 'Overall'
     ascending = False
     sql_text = "select {} from scores as s".format(', '.join(columns)) \
@@ -162,7 +173,7 @@ def index():
 def get_scores():
     user = request.args.get('user', None)
     columns = ['print_name', 'created_at', 'comment',
-               'Person', 'Company', 'City', 'Compound', 'Airport', 'Overall']
+               'Company', 'City', 'Overall']
     sql_text = "select {} from scores as s".format(', '.join(columns)) \
         + " inner join users on s.user_primary_key = users.id " \
         + (" where print_name='{}'".format(user) if user is not None else "") \
@@ -175,9 +186,11 @@ def get_scores():
 @app.route('/upload', methods=['POST'])
 def upload_and_evaluate():
     filenames = {
-        'Person.json', 'Company.json', 'City.json',
-        'Compound.json', 'Airport.json'
+        'Company.json', 'City.json',
     }
+    settings = json.load(open('./data/settings.json', 'r'))
+    target_dict = settings['target_dict']
+    annotation_dict = settings['annotation_dict']
     upload_form = UploadForm()
     f = upload_form.zip_file.data
     description = upload_form.description.data
@@ -191,11 +204,23 @@ def upload_and_evaluate():
                 basename = os.path.basename(fname)
                 if basename in filenames:
                     try:
-                        data = [
+                        submit_data = [
                             json.loads(line) for line in
                             existing_zip.open(fname, 'r').readlines()
                         ]
-                        result[basename] = np.random.rand()  # ここに評価コード
+                        annotation_path = annotation_dict[basename]
+                        target = target_dict[basename]
+                        score_dict = scoring.get_score(
+                            answer=annotation_path,
+                            result=submit_data,
+                            target=target
+                        )
+                        # 森羅LBと同様，'text_offset' が含まれるデータは 'text' での結果を採用
+                        if 'text' in score_dict:
+                            f1 = score_dict['text']['micro_ave']['F1']
+                        else:
+                            f1 = score_dict['html']['micro_ave']['F1']
+                        result[basename] = f1
                     except:
                         flash("評価スクリプトが異常終了しました．" +
                               "データのフォーマット等を見直してください．", "failed")
@@ -219,4 +244,4 @@ def upload_and_evaluate():
 
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8000, debug=True)
+    app.run(host="0.0.0.0", port=8000, debug=False)

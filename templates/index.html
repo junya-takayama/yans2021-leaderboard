@@ -130,20 +130,19 @@
           <thead>
             <tr>
               <th style="min-width: 200px;">#</th>
-              <th style="min-width: 200px; max-width: 200px;">チーム</th>
-              <th style="padding-right: 20px;">Person</th>
+              <th style="min-width: 300px;">チーム</th>
               <th style="padding-right: 20px;">Company</th>
               <th style="padding-right: 20px;">City</th>
-              <th style="padding-right: 20px;">Compound</th>
-              <th style="padding-right: 20px;">Airport</th>
               <th style="padding-right: 20px;">Overall</th>
             </tr>
           </thead>
           <tbody>
             {% for row in score_table %}
+              {% set rank=loop.index %}
               <tr>
                 <td>
-                  <span style="font-weight: bolder;">{{ loop.index }}</span>
+                  <span style="font-weight: bolder;">{{ rank }}</span>
+
                   <br><span class="badge">
                     {{ row.created_at }}
                   </span>
@@ -152,8 +151,12 @@
                   <span style="font-weight: bolder;">{{ row.print_name }}</span>
                   <br>{{ row.comment }}
                 </td>
-                {% for elem in ['Person', 'Company', 'City', 'Compound', 'Airport', 'Overall'] %}
-                  <td>{{ row[elem]|round(3) }}</td>
+                {% for elem in ['Company', 'City', 'Overall'] %}
+                  {% if elem == 'Overall' and rank == 1 %}
+                    <td><span style="font-weight: bolder;">{{ row[elem]|round(3) }}</span></td>
+                  {% else %}
+                    <td>{{ row[elem]|round(3) }}</td>
+                  {% endif %}
                 {% endfor %}
               </tr>
             {% endfor %}
