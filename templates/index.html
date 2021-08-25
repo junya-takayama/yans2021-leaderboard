@@ -53,121 +53,123 @@
     </script>
   </head>
   <body>
-    <nav class="nav-wrapper light-green darken-3" style="position: fixed; top:0px;">
-      <a class="brand-logo center" href="https://yans.anlp.jp/entry/yans2021hackathon">YANS2021 Leaderboard</a>
-      {% if current_user.is_authenticated %}
-      <ul id="nav-mobile" class="right hide-on-med-and-down">
-        <li>{{ current_user.user_id }} でログイン中</li>
-        {% if current_user.is_admin %}
-        <li><a href="{{ url_for('admin.index') }}">管理画面</a></li>
-        {% endif %}
-        <li><a class="nav-link" href="{{ url_for('logout') }}">ログアウト</a></li>
-      </ul>
-      {% endif %}
-    </nav>
-
-    <div style="margin-top:100px;">
-
-    {% with messages = get_flashed_messages(with_categories=false) %}
-      {% if messages %}
-      <div class="row">
-        <div class="col l8 offset-l2 s12 left">
-        <ul class="flashes">
-        {% for message in messages %}
-          <li>{{ message }}</li>
-        {% endfor %}
+    <div style="min-height: 100vh; position: relative; padding-bottom: 60px; box-sizing: border-box; padding-top:100px;">
+      <nav class="nav-wrapper light-green darken-3" style="position: fixed; top:0px;">
+        <a class="brand-logo center" href="https://yans.anlp.jp/entry/yans2021hackathon">YANS2021 Leaderboard</a>
+        {% if current_user.is_authenticated %}
+        <ul id="nav-mobile" class="right hide-on-med-and-down">
+          <li>{{ current_user.user_id }} でログイン中</li>
+          {% if current_user.is_admin %}
+          <li><a href="{{ url_for('admin.index') }}">管理画面</a></li>
+          {% endif %}
+          <li><a class="nav-link" href="{{ url_for('logout') }}">ログアウト</a></li>
         </ul>
-      </div>
-      </div>
-      {% endif %}
-    {% endwith %}
+        {% endif %}
+      </nav>
 
-    {% if not current_user.is_authenticated %}
-      <form action="{{ url_for('login') }}" method="POST" class="col s12 l12">
+      <div class="contents">
+
+      {% with messages = get_flashed_messages(with_categories=false) %}
+        {% if messages %}
         <div class="row">
-          {{ login_form.csrf_token }}
-          <div class="input-field inline col s4 l3 offset-l2">
-          {{ login_form.user_id.label }} {{ login_form.user_id }}
+          <div class="col l8 offset-l2 s12 left">
+          <ul class="flashes">
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+          </ul>
+        </div>
+        </div>
+        {% endif %}
+      {% endwith %}
+
+      {% if not current_user.is_authenticated %}
+        <form action="{{ url_for('login') }}" method="POST" class="col s12 l12">
+          <div class="row">
+            {{ login_form.csrf_token }}
+            <div class="input-field inline col s4 l3 offset-l2">
+            {{ login_form.user_id.label }} {{ login_form.user_id }}
+            </div>
+            <div class="input-field inline col s4 l3">
+            {{ login_form.password.label }} {{ login_form.password }}
+            </div>
+            <div class="input-field inline col s4 l2">
+            <button class="btn waves-effect waves-light right" type="submit" name="action">
+              ログイン<i class="material-icons right">login</i>
+            </button>
+            </div>
           </div>
-          <div class="input-field inline col s4 l3">
-          {{ login_form.password.label }} {{ login_form.password }}
+        </form>
+
+      {% endif %}
+
+      {% if current_user.is_authenticated %}
+      <form action="{{ url_for('upload_and_evaluate') }}" method="POST" enctype="multipart/form-data" class="row col s12 l12">
+        {{ upload_form.csrf_token }}
+        <div class="input-field file-field inline col s5 offset-l2 l3">
+          <div class="btn">
+            ファイルを選択
+            <input type="file" name="zip_file" id="zip_file" required>
           </div>
-          <div class="input-field inline col s4 l2">
-          <button class="btn waves-effect waves-light right" type="submit" name="action">
-            ログイン<i class="material-icons right">login</i>
-          </button>
+          <div class="file-path-wrapper">
+            <input class="file-path validate" type="text" name="zip_file" id="zip_file" required>
           </div>
+        </div>
+        <div class="input-field inline col s5 l3">
+          {{ upload_form.description.label }} {{ upload_form.description }}
+        </div>
+        <div class="input-field inline col s2 l2">
+        <button class="btn waves-effect waves-light right" type="submit" name="action">
+          SUBMIT<i class="material-icons right">send</i>
+        </button>
         </div>
       </form>
-
-    {% endif %}
-
-    {% if current_user.is_authenticated %}
-    <form action="{{ url_for('upload_and_evaluate') }}" method="POST" enctype="multipart/form-data" class="row col s12 l12">
-      {{ upload_form.csrf_token }}
-      <div class="input-field file-field inline col s5 offset-l2 l3">
-        <div class="btn">
-          ファイルを選択
-          <input type="file" name="zip_file" id="zip_file" required>
-        </div>
-        <div class="file-path-wrapper">
-          <input class="file-path validate" type="text" name="zip_file" id="zip_file" required>
-        </div>
-      </div>
-      <div class="input-field inline col s5 l3">
-        {{ upload_form.description.label }} {{ upload_form.description }}
-      </div>
-      <div class="input-field inline col s2 l2">
-      <button class="btn waves-effect waves-light right" type="submit" name="action">
-        SUBMIT<i class="material-icons right">send</i>
-      </button>
-      </div>
-    </form>
-    {% endif %}
-    <div class="row scroll-table">
-      <div class="col l10 offset-l1 s12">
-        <table id="score_board" class="highlight centered">
-          <thead>
-            <tr>
-              <th style="min-width: 200px;">#</th>
-              <th style="min-width: 300px;">チーム</th>
-              <th style="padding-right: 20px;">Company</th>
-              <th style="padding-right: 20px;">City</th>
-              <th style="padding-right: 20px;">Overall</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for row in score_table %}
-              {% set rank=loop.index %}
+      {% endif %}
+      <div class="row scroll-table">
+        <div class="col l10 offset-l1 s12">
+          <table id="score_board" class="highlight centered">
+            <thead>
               <tr>
-                <td>
-                  <span style="font-weight: bolder;">{{ rank }}</span>
-
-                  <br><span class="badge">
-                    {{ row.created_at }}
-                  </span>
-                </td>
-                <td>
-                  <span style="font-weight: bolder;">{{ row.print_name }}</span>
-                  <br>{{ row.comment }}
-                </td>
-                {% for elem in ['Company', 'City', 'Overall'] %}
-                  {% if elem == 'Overall' and rank == 1 %}
-                    <td><span style="font-weight: bolder;">{{ row[elem]|round(3) }}</span></td>
-                  {% else %}
-                    <td>{{ row[elem]|round(3) }}</td>
-                  {% endif %}
-                {% endfor %}
+                <th style="min-width: 200px;">#</th>
+                <th style="min-width: 300px;">チーム</th>
+                <th style="padding-right: 20px;">Company</th>
+                <th style="padding-right: 20px;">City</th>
+                <th style="padding-right: 20px;">Overall</th>
               </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {% for row in score_table %}
+                {% set rank=loop.index %}
+                <tr>
+                  <td>
+                    <span style="font-weight: bolder;">{{ rank }}</span>
+
+                    <br><span class="badge">
+                      {{ row.created_at }}
+                    </span>
+                  </td>
+                  <td>
+                    <span style="font-weight: bolder;">{{ row.print_name }}</span>
+                    <br>{{ row.comment }}
+                  </td>
+                  {% for elem in ['Company', 'City', 'Overall'] %}
+                    {% if elem == 'Overall' and rank == 1 %}
+                      <td><span style="font-weight: bolder;">{{ row[elem]|round(3) }}</span></td>
+                    {% else %}
+                      <td>{{ row[elem]|round(3) }}</td>
+                    {% endif %}
+                  {% endfor %}
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
-  </div>
-  <div class="row" style="position: absolute; bottom: 0; width: 100%;">
-    <div class="col s12 l4 offset-l4 center">
-      <img src="/static/logo.jpg" height=30px></img> <span class="blue-grey-text"><a class="blue-grey-text" href="https://yans.anlp.jp/entry/yans2021">NLP若手の会</a></span>
+    <div class="row" style="position: absolute; bottom: 0; width: 100%;">
+      <div class="col s12 l4 offset-l4 center">
+        <img src="/static/logo.jpg" height=30px></img> <span class="blue-grey-text"><a class="blue-grey-text" href="https://yans.anlp.jp/entry/yans2021">NLP若手の会</a></span>
+      </div>
     </div>
   </div>
 
