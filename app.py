@@ -10,6 +10,8 @@ from flask_admin import Admin, expose, AdminIndexView
 from flask_admin.contrib.sqla import ModelView
 from sqlalchemy.sql.functions import current_timestamp
 from sqlalchemy import event
+from pytz import timezone
+from dateutil import parser
 import tempfile
 import zipfile
 import scoring
@@ -30,6 +32,17 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///{host}/{name}'.format(**{
 #app.config['FLASK_ADMIN_SWATCH'] = 'United'
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
+
+def utc_to_jst(timestring):
+    date = parser.parse(
+        timestring,
+        default=parser.parse('00:00Z')
+    ).astimezone(timezone("Asia/Tokyo"))
+    return date.strftime("%Y-%m-%d %H:%M")
+
+
+app.jinja_env.filters['utc_to_jst'] = utc_to_jst
 
 
 class User(UserMixin, db.Model):
@@ -164,6 +177,8 @@ def index():
         + " order by {} {}".format(sort_key, 'ASC' if ascending else 'DESC')
     results = db.session.execute(sql_text)
     score_table = list(map(dict, results.fetchall()))
+    print(score_table[0]['created_at'])
+
     return render_template(
         './index.html', login_form=login_form, upload_form=upload_form,
         current_user=current_user, score_table=score_table)

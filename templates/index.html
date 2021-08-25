@@ -145,7 +145,7 @@
                     <span style="font-weight: bolder;">{{ rank }}</span>
 
                     <br><span class="badge">
-                      {{ row.created_at }}
+                      {{ row.created_at | utc_to_jst }}
                     </span>
                   </td>
                   <td>
