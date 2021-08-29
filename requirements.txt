@@ -7,3 +7,5 @@ Flask_Login
 Flask_Migrate
 Flask_SQLAlchemy==2.5
 Flask_WTF
+plotly
+pandas

@@ -12,6 +12,9 @@ from sqlalchemy.sql.functions import current_timestamp
 from sqlalchemy import event
 from pytz import timezone
 from dateutil import parser
+import pandas as pd
+import plotly.graph_objects as go
+import plotly
 import tempfile
 import zipfile
 import scoring
@@ -185,18 +188,47 @@ def index():
         current_user=current_user, score_table=score_table)
 
 
+# @app.route('/history', methods=['GET'])
+# def get_scores():
+#     user = request.args.get('user', None)
+#     columns = ['print_name', 'created_at', 'comment',
+#                'Company', 'City', 'Overall']
+#     sql_text = "select {} from scores as s".format(', '.join(columns)) \
+#         + " inner join users on s.user_primary_key = users.id " \
+#         + (" where print_name='{}'".format(user) if user is not None else "") \
+#         + " order by created_at DESC"
+#     results = db.session.execute(sql_text)
+#     score_table = list(map(dict, results.fetchall()))
+#     return jsonify(score_table)
+
+
 @app.route('/history', methods=['GET'])
-def get_scores():
-    user = request.args.get('user', None)
+def visualize():
     columns = ['print_name', 'created_at', 'comment',
                'Company', 'City', 'Overall']
     sql_text = "select {} from scores as s".format(', '.join(columns)) \
         + " inner join users on s.user_primary_key = users.id " \
-        + (" where print_name='{}'".format(user) if user is not None else "") \
         + " order by created_at DESC"
     results = db.session.execute(sql_text)
-    score_table = list(map(dict, results.fetchall()))
-    return jsonify(score_table)
+    df_all = pd.DataFrame(list(map(dict, results.fetchall())))
+    fig = go.FigureWidget(layout_yaxis_range=[0, 1])
+    for group_name, df in df_all.groupby("print_name"):
+        if group_name == "YANSハッカソン運営委員":
+            for row in df.iterrows():
+                fig.add_hline(y=row[1]["Overall"], annotation_text=row[1].comment, line=dict(
+                    width=1, dash="dot"))
+        else:
+            fig.add_scatter(
+                x=df.created_at.values, y=df.Overall.values,
+                text=df.comment,
+                # visible='legendonly',
+                name=group_name, mode="lines+markers",
+                line=dict(
+                    width=1,
+                )
+            )
+    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+    return render_template('history.html', graphJSON=graphJSON)
 
 
 @app.route('/upload', methods=['POST'])

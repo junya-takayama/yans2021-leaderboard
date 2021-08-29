@@ -1,0 +1,31 @@
+<html>
+
+<head>
+  <title>YANS2021 ハッカソン - History</title>
+</head>
+
+<body>
+    <div id="graph-1"></div>
+</body>
+
+
+<footer>
+    <!-- D3.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <script type="text/javascript">
+
+        var graph = {{graphJSON | safe}};
+
+        Plotly.plot("graph-1", // the ID of the div, created above
+                    graph.data,
+                    graph.layout || {});
+
+    </script>
+</footer>
+
+</html>
