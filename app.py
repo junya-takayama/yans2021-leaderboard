@@ -211,7 +211,7 @@ def visualize():
         + " order by created_at DESC"
     results = db.session.execute(sql_text)
     df_all = pd.DataFrame(list(map(dict, results.fetchall())))
-    fig = go.FigureWidget(layout_yaxis_range=[0, 1])
+    fig = go.Figure(layout_yaxis_range=[0, 1])
     for group_name, df in df_all.groupby("print_name"):
         if group_name == "YANSハッカソン運営委員":
             for row in df.iterrows():
