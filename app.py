@@ -21,6 +21,7 @@ import os
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 app = Flask(__name__)
+app.config['JSON_AS_ASCII'] = False
 login_manager = LoginManager()
 login_manager.init_app(app)
 app.secret_key = SECRET_KEY
