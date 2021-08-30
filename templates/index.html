@@ -45,7 +45,8 @@
               theme : "materialize",
               headers: {
                 0: {sorter:false},
-                1: {sorter:false}
+                1: {sorter:false},
+                2: {sorter:false}
               }
             }
           );
@@ -132,6 +133,7 @@
               <tr>
                 <th style="min-width: 200px;">#</th>
                 <th style="min-width: 300px;">チーム</th>
+                <th style="padding-right: 20px;">提出回数</th>
                 <th style="padding-right: 20px;">Company</th>
                 <th style="padding-right: 20px;">City</th>
                 <th style="padding-right: 20px;">Overall</th>
@@ -151,6 +153,9 @@
                   <td>
                     <span style="font-weight: bolder;">{{ row.print_name }}</span>
                     <br>{{ row.comment }}
+                  </td>
+                  <td>
+                    {{ row.n_submit }}
                   </td>
                   {% for elem in ['Company', 'City', 'Overall'] %}
                     {% if elem == 'Overall' and rank == 1 %}

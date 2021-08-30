@@ -171,7 +171,7 @@ def index():
     login_form = LoginForm()
     upload_form = UploadForm()
     columns = ['print_name', 'created_at', 'comment',
-               'Company', 'City', 'Overall']
+               'Company', 'City', 'Overall', 'n_submit']
     sort_key = 'Overall'
     ascending = False
     sql_text = "select {} from scores as s".format(', '.join(columns)) \
@@ -266,10 +266,13 @@ def upload_and_evaluate():
                             target=target
                         )
                         # 森羅LBと同様，'text_offset' が含まれるデータは 'text' での結果を採用
+                        print(basename)
                         if 'text' in score_dict:
                             f1 = score_dict['text']['micro_ave']['F1']
+                            print('text', score_dict['text']['micro_ave'])
                         else:
                             f1 = score_dict['html']['micro_ave']['F1']
+                            print('html', score_dict['html']['micro_ave'])
                         result[basename] = f1
                     except:
                         flash("評価スクリプトが異常終了しました．" +
@@ -294,4 +297,4 @@ def upload_and_evaluate():
 
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8001, debug=False)
+    app.run(host="0.0.0.0", port=8001, debug=True)
