@@ -216,7 +216,7 @@ def visualize():
         if group_name == "YANSハッカソン運営委員":
             for row in df.iterrows():
                 fig.add_hline(y=row[1]["Overall"], annotation_text=row[1].comment, line=dict(
-                    width=1, dash="dot"))
+                    width=1, dash="dot", annotation_position="bottom left"))
         else:
             fig.add_scatter(
                 x=df.created_at.values, y=df.Overall.values,
